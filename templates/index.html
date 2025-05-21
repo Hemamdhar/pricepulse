@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PricePulse</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <h1>Amazon Price Tracker</h1>
+
+    <form action="/add" method="POST">
+      <input type="text" name="url" placeholder="Amazon Product URL" required />
+      <button type="submit">Track Product</button>
+    </form>
+
+    <br />
+
+    {% for product in products %}
+    <div style="margin-bottom: 40px">
+      <h2>{{ product[1] }}</h2>
+      {% if product[2] %}
+      <img
+        src="{{ product[2] }}"
+        alt="Product Image"
+        style="max-width: 150px"
+      />
+      {% endif %}
+      <canvas id="priceChart{{ product[0] }}" width="600" height="400"></canvas>
+      <script>
+        (async function () {
+          const response = await fetch("/history/{{ product[0] }}");
+          const result = await response.json();
+          const prices = result.history.map((item) => item.price);
+          const timestamps = result.history.map((item) => item.timestamp);
+
+          const ctx = document
+            .getElementById("priceChart{{ product[0] }}")
+            .getContext("2d");
+          new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: timestamps,
+              datasets: [
+                {
+                  label: "Price (₹)",
+                  data: prices,
+                  borderColor: "blue",
+                  borderWidth: 2,
+                  fill: false,
+                },
+              ],
+            },
+            options: {
+              scales: {
+                x: { display: true, title: { display: true, text: "Time" } },
+                y: {
+                  display: true,
+                  title: { display: true, text: "Price (₹)" },
+                },
+              },
+            },
+          });
+        })();
+      </script>
+    </div>
+    {% endfor %}
+  </body>
+</html>
